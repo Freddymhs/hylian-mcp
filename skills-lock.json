@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "vitest": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "github",
+      "skillPath": "toolchains/typescript/testing/vitest/SKILL.md",
+      "computedHash": "ab8286ae8b6b0f216c69a5c7e6e029caac2365e50aafc4b64cc99e33ae6b698f"
+    }
+  }
+}
