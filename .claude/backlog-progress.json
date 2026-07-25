@@ -1,0 +1,42 @@
+{
+  "project": "hylian-mcp",
+  "tech": "node22-typescript-mcp-supabase",
+  "current_phase": "FASE_0",
+  "phases": {
+    "FASE_0": {
+      "status": "pending",
+      "tasks": 0,
+      "total": 7,
+      "name": "Limpieza de scaffold"
+    },
+    "FASE_1": {
+      "status": "pending",
+      "tasks": 0,
+      "total": 8,
+      "name": "MVP funcional"
+    },
+    "FASE_2": {
+      "status": "pending",
+      "tasks": 0,
+      "total": 7,
+      "name": "Recomendaciones + edición"
+    },
+    "FASE_3": {
+      "status": "pending",
+      "tasks": 0,
+      "total": 5,
+      "name": "Polish + publicación"
+    }
+  },
+  "totals": {
+    "tasks_done": 0,
+    "tasks_total": 27
+  },
+  "meta": {
+    "generated_at": "2026-07-25",
+    "source_concept": "docs/_CONCEPTO.md",
+    "backlog_dir": "docs/backlog",
+    "testsprite_enabled": false,
+    "flows_doc": "docs/flows.md"
+  }
+}
