@@ -1,26 +1,27 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { registerSummarizePrompt } from '../summarize.prompt.js';
 
+async function setup() {
+  const server = new McpServer({ name: 'test', version: '0.0.1' });
+  registerSummarizePrompt(server);
+
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+
+  await server.connect(serverTransport);
+
+  const client = new Client({ name: 'test-client', version: '0.0.1' });
+  await client.connect(clientTransport);
+
+  return { client };
+}
+
 describe('summarize prompt', () => {
-  let client: Client;
-
-  beforeEach(async () => {
-    const server = new McpServer({ name: 'test', version: '0.0.1' });
-    registerSummarizePrompt(server);
-
-    const [clientTransport, serverTransport] =
-      InMemoryTransport.createLinkedPair();
-
-    await server.connect(serverTransport);
-
-    client = new Client({ name: 'test-client', version: '0.0.1' });
-    await client.connect(clientTransport);
-  });
-
   it('lists the summarize prompt', async () => {
+    const { client } = await setup();
     const { prompts } = await client.listPrompts();
     const summarize = prompts.find((p) => p.name === 'summarize');
 
@@ -29,6 +30,7 @@ describe('summarize prompt', () => {
   });
 
   it('generates a brief summary prompt', async () => {
+    const { client } = await setup();
     const result = await client.getPrompt({
       name: 'summarize',
       arguments: {
@@ -49,6 +51,7 @@ describe('summarize prompt', () => {
   });
 
   it('generates a bullet-points prompt', async () => {
+    const { client } = await setup();
     const result = await client.getPrompt({
       name: 'summarize',
       arguments: {
@@ -67,6 +70,7 @@ describe('summarize prompt', () => {
   });
 
   it('uses defaults when optional params omitted', async () => {
+    const { client } = await setup();
     const result = await client.getPrompt({
       name: 'summarize',
       arguments: {

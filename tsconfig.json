@@ -11,7 +11,12 @@
       "@common/*": ["src/common/*"],
       "@tools/*": ["src/tools/*"],
       "@resources/*": ["src/resources/*"],
-      "@prompts/*": ["src/prompts/*"]
+      "@prompts/*": ["src/prompts/*"],
+      "@examples/*": ["src/examples/*"],
+      "@db/*": ["src/db/*"],
+      "@services/*": ["src/services/*"],
+      "@jobs/*": ["src/jobs/*"],
+      "@providers/*": ["src/providers/*"]
     },
     "strict": true,
     "esModuleInterop": true,

@@ -4,17 +4,17 @@ Backlog estructurado del proyecto. Generado desde `../_CONCEPTO.md` (single-user
 
 ## Estado actual
 
-**Fase actual:** FASE_0 (PENDIENTE)
-**Próximo paso:** `/work:backlog:next` para tomar la primera tarea.
+**Fase actual:** todas las fases implementadas con dobles (2026-10-24).
+**Próximo paso:** probar con credenciales reales (Supabase + Steam), seguir `docs/flows.md`, y decidir el `npm publish`. Pendientes en cada `docs/decisions/DECISION_FASE*_DESVIOS.md`.
 
 ## Fases
 
-| Fase                                  | Nombre                    | Status       | Tareas | Fuente               |
-| ------------------------------------- | ------------------------- | ------------ | ------ | -------------------- |
-| [FASE_0](./FASE_0_LIMPIEZA.md)        | Limpieza de scaffold      | ⏸️ PENDIENTE | 7      | residuo template-mcp |
-| [FASE_1](./FASE_1_MVP.md)             | MVP funcional             | ⏸️ PENDIENTE | 8      | concepto F1 (1-10)   |
-| [FASE_2](./FASE_2_RECOMENDACIONES.md) | Recomendaciones + edición | ⏸️ PENDIENTE | 7      | concepto F2 (11-18)  |
-| [FASE_3](./FASE_3_POLISH.md)          | Polish + publicación      | ⏸️ PENDIENTE | 5      | concepto F3 (19-23)  |
+| Fase                                  | Nombre                    | Status        | Tareas | Fuente               |
+| ------------------------------------- | ------------------------- | ------------- | ------ | -------------------- |
+| [FASE_0](./FASE_0_LIMPIEZA.md)        | Limpieza de scaffold      | ✅ COMPLETA   | 7      | residuo template-mcp |
+| [FASE_1](./FASE_1_MVP.md)             | MVP funcional             | 🟡 CON DOBLES | 8      | concepto F1 (1-10)   |
+| [FASE_2](./FASE_2_RECOMENDACIONES.md) | Recomendaciones + edición | 🟡 CON DOBLES | 7      | concepto F2 (11-18)  |
+| [FASE_3](./FASE_3_POLISH.md)          | Polish + publicación      | 🟡 CON DOBLES | 5      | concepto F3 (19-23)  |
 
 Total: **27 tareas** en 4 fases.
 

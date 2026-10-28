@@ -1,27 +1,28 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { SERVER_NAME, SERVER_VERSION } from '@config/constants.js';
 import { registerServerInfoResource } from '../server-info.resource.js';
 
+async function setup() {
+  const server = new McpServer({ name: 'test', version: '0.0.1' });
+  registerServerInfoResource(server);
+
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+
+  await server.connect(serverTransport);
+
+  const client = new Client({ name: 'test-client', version: '0.0.1' });
+  await client.connect(clientTransport);
+
+  return { client };
+}
+
 describe('server-info resource', () => {
-  let client: Client;
-
-  beforeEach(async () => {
-    const server = new McpServer({ name: 'test', version: '0.0.1' });
-    registerServerInfoResource(server);
-
-    const [clientTransport, serverTransport] =
-      InMemoryTransport.createLinkedPair();
-
-    await server.connect(serverTransport);
-
-    client = new Client({ name: 'test-client', version: '0.0.1' });
-    await client.connect(clientTransport);
-  });
-
   it('lists the server-info resource', async () => {
+    const { client } = await setup();
     const { resources } = await client.listResources();
     const info = resources.find((r) => r.uri === 'info://server');
 
@@ -30,6 +31,7 @@ describe('server-info resource', () => {
   });
 
   it('returns valid server info JSON', async () => {
+    const { client } = await setup();
     const result = await client.readResource({ uri: 'info://server' });
     const content = result.contents[0];
 

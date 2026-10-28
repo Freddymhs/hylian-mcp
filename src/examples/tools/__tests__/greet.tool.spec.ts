@@ -1,26 +1,27 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { registerGreetTool } from '../greet.tool.js';
 
+async function setup() {
+  const server = new McpServer({ name: 'test', version: '0.0.1' });
+  registerGreetTool(server);
+
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+
+  await server.connect(serverTransport);
+
+  const client = new Client({ name: 'test-client', version: '0.0.1' });
+  await client.connect(clientTransport);
+
+  return { client };
+}
+
 describe('greet tool', () => {
-  let client: Client;
-
-  beforeEach(async () => {
-    const server = new McpServer({ name: 'test', version: '0.0.1' });
-    registerGreetTool(server);
-
-    const [clientTransport, serverTransport] =
-      InMemoryTransport.createLinkedPair();
-
-    await server.connect(serverTransport);
-
-    client = new Client({ name: 'test-client', version: '0.0.1' });
-    await client.connect(clientTransport);
-  });
-
   it('lists the greet tool', async () => {
+    const { client } = await setup();
     const { tools } = await client.listTools();
     const greet = tools.find((t) => t.name === 'greet');
 
@@ -29,6 +30,7 @@ describe('greet tool', () => {
   });
 
   it('returns casual greeting by default', async () => {
+    const { client } = await setup();
     const result = await client.callTool({
       name: 'greet',
       arguments: { name: 'Freddy' },
@@ -41,6 +43,7 @@ describe('greet tool', () => {
   });
 
   it('returns formal greeting when requested', async () => {
+    const { client } = await setup();
     const result = await client.callTool({
       name: 'greet',
       arguments: { name: 'Dr. Smith', style: 'formal' },
@@ -53,6 +56,7 @@ describe('greet tool', () => {
   });
 
   it('returns enthusiastic greeting when requested', async () => {
+    const { client } = await setup();
     const result = await client.callTool({
       name: 'greet',
       arguments: { name: 'Alice', style: 'enthusiastic' },
@@ -65,6 +69,7 @@ describe('greet tool', () => {
   });
 
   it('rejects empty name', async () => {
+    const { client } = await setup();
     const result = await client.callTool({
       name: 'greet',
       arguments: { name: '' },

@@ -1,0 +1,21 @@
+# `files` in package.json is the allowlist; this is a second net for anything that could slip in.
+src/
+scripts/
+**/__tests__/
+**/*.spec.*
+**/*.map
+.env
+.env.*
+!.env.example
+.claude/
+.serena/
+.agents/
+.github/
+.husky/
+docs/
+coverage/
+*.log
+Dockerfile
+.dockerignore
+skills-lock.json
+elevator_speech.md

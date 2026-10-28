@@ -1,6 +1,6 @@
 # FASE 0: Limpieza de scaffold
 
-**Status**: ⏸️ PENDIENTE
+**Status**: ✅ COMPLETA (2026-10-24) — tarea 4 cerrada por decisión, ver [`DECISION_FASE0_DESVIOS.md`](../decisions/DECISION_FASE0_DESVIOS.md)
 **Prioridad**: Alta
 **Dependencias**: ninguna
 **Fuente**: análisis propio del scaffold (joi residue, dist/ en git, placeholders como producto, workspace.yaml huérfano, README miente)
@@ -11,7 +11,7 @@ Quitar ruido del template-mcp para que el producto (hylian-mcp) entre a FASE_1 s
 
 ## Tareas
 
-### Tarea 1: Reemplazar joi por zod en env validation
+### Tarea 1: Reemplazar joi por zod en env validation ✅
 
 - Archivos: `package.json` (sacar `joi`), `src/config/env.ts` (reescribir con `z`)
 - Qué hacer:
@@ -21,7 +21,7 @@ Quitar ruido del template-mcp para que el producto (hylian-mcp) entre a FASE_1 s
   4. Tipar el output con `z.infer<typeof schema>`.
 - Referencia: `src/tools/greet.tool.ts` (uso idiomático de zod).
 
-### Tarea 2: Mover placeholders a `src/examples/`
+### Tarea 2: Mover placeholders a `src/examples/` ✅
 
 - Archivos: `src/tools/greet.tool.ts`, `src/prompts/summarize.prompt.ts`, `src/resources/server-info.resource.ts`
 - Qué hacer:
@@ -32,7 +32,7 @@ Quitar ruido del template-mcp para que el producto (hylian-mcp) entre a FASE_1 s
   5. Actualizar path aliases en `tsconfig.json` + `vitest.config.ts` para incluir `@examples/*`.
 - Razón: dejar claro que NO son producto; son referencia de cómo escribir tools/prompts/resources.
 
-### Tarea 3: Sacar `dist/` de git
+### Tarea 3: Sacar `dist/` de git ✅ (ya estaba fuera de git; nada que remover)
 
 - Archivos: `dist/` (ya está en `.gitignore`, falta ejecutar el rm)
 - Qué hacer:
@@ -41,7 +41,7 @@ Quitar ruido del template-mcp para que el producto (hylian-mcp) entre a FASE_1 s
   3. Commit con `chore: untrack dist/` (no lo comiteo yo — decisión del usuario).
 - Razón: build artifact, no debe vivir en el repo.
 
-### Tarea 4: Eliminar `pnpm-workspace.yaml`
+### Tarea 4: Eliminar `pnpm-workspace.yaml` ✅ (NO ejecutada: el archivo es la allowlist de build de esbuild; sin él `pnpm install` falla)
 
 - Archivo: `pnpm-workspace.yaml`
 - Qué hacer:
@@ -50,7 +50,7 @@ Quitar ruido del template-mcp para que el producto (hylian-mcp) entre a FASE_1 s
   3. Commit con `chore: remove orphan pnpm-workspace.yaml`.
 - Razón: declara workspace sin packages; causa ambigüedad en install behavior.
 
-### Tarea 5: Agregar dependencias de F1
+### Tarea 5: Agregar dependencias de F1 ✅ (sin `@types/node-cron`: node-cron 4 trae tipos propios)
 
 - Archivo: `package.json`
 - Qué hacer:
@@ -59,7 +59,7 @@ Quitar ruido del template-mcp para que el producto (hylian-mcp) entre a FASE_1 s
   3. Verificar que `pnpm install --frozen-lockfile` sigue pasando.
 - Razón: preparar el terreno para FASE_1 sin esperar al medio del sprint.
 
-### Tarea 6: Agregar env keys de F1
+### Tarea 6: Agregar env keys de F1 ✅
 
 - Archivos: `src/config/constants.ts`, `.env.example`
 - Qué hacer:
@@ -77,7 +77,7 @@ Quitar ruido del template-mcp para que el producto (hylian-mcp) entre a FASE_1 s
   3. NO incluir valores reales. NO commitear `.env`.
 - Razón: documentar las variables que FASE_1 va a leer.
 
-### Tarea 7: Reescribir README.md desde concepto
+### Tarea 7: Reescribir README.md desde concepto ✅
 
 - Archivo: `README.md`
 - Qué hacer:
@@ -106,10 +106,10 @@ Quitar ruido del template-mcp para que el producto (hylian-mcp) entre a FASE_1 s
 
 ## Criterios de Aceptación
 
-- [ ] `pnpm type-check` pasa con zod reemplazando joi
-- [ ] `pnpm test` pasa con placeholders movidos a `src/examples/`
-- [ ] `git ls-files | grep dist` retorna vacío
-- [ ] `pnpm install --frozen-lockfile` pasa con las nuevas deps
-- [ ] `.env.example` lista las 5 variables de F1 (vacías, comentadas)
-- [ ] `README.md` describe el producto, no el template
-- [ ] `pnpm lint` limpio
+- [x] `pnpm type-check` pasa con zod reemplazando joi
+- [x] `pnpm test` pasa con placeholders movidos a `src/examples/`
+- [x] `git ls-files | grep dist` retorna vacío
+- [x] `pnpm install --frozen-lockfile` pasa con las nuevas deps
+- [x] `.env.example` lista las 5 variables de F1 (vacías, comentadas)
+- [x] `README.md` describe el producto, no el template
+- [x] `pnpm lint` limpio

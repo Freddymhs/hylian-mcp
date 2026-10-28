@@ -9,10 +9,16 @@ export default defineConfig({
       '@tools': path.resolve(__dirname, 'src/tools'),
       '@resources': path.resolve(__dirname, 'src/resources'),
       '@prompts': path.resolve(__dirname, 'src/prompts'),
+      '@examples': path.resolve(__dirname, 'src/examples'),
+      '@db': path.resolve(__dirname, 'src/db'),
+      '@services': path.resolve(__dirname, 'src/services'),
+      '@jobs': path.resolve(__dirname, 'src/jobs'),
+      '@providers': path.resolve(__dirname, 'src/providers'),
     },
   },
   test: {
     environment: 'node',
+    env: { LOG_LEVEL: 'silent' },
     globals: true,
     include: ['src/**/*.spec.ts'],
     coverage: {

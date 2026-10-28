@@ -1,6 +1,6 @@
 # FASE 1: MVP funcional
 
-**Status**: ⏸️ PENDIENTE
+**Status**: 🟡 IMPLEMENTADA CON DOBLES (2026-10-24) — faltan los criterios que requieren credenciales reales; desvíos en [`DECISION_FASE1_DESVIOS.md`](../decisions/DECISION_FASE1_DESVIOS.md)
 **Prioridad**: Alta
 **Dependencias**: FASE_0
 **Fuente**: `../_CONCEPTO.md` F1 (10 pasos), consolidados en 8 tareas
@@ -24,7 +24,7 @@ Scaffold corriendo: podés sincronizar tu Steam y escribir reseñas. Single-user
 
 ## Tareas
 
-### Tarea 1: Configurar env vars de runtime
+### Tarea 1: Configurar env vars de runtime ✅
 
 - Archivos: `src/config/env.ts` (extender schema zod), `.env.example` (ya tiene placeholders, agregar docs)
 - Qué hacer:
@@ -33,7 +33,7 @@ Scaffold corriendo: podés sincronizar tu Steam y escribir reseñas. Single-user
   3. `.env.example` documenta cada var con link a dónde conseguirla (Supabase dashboard, Steam API key page).
 - Referencia: el schema SQL de Tarea 2.
 
-### Tarea 2: Schema Supabase
+### Tarea 2: Schema Supabase ✅
 
 - Archivo: `src/db/schema.sql` (nuevo)
 - Qué hacer:
@@ -42,7 +42,7 @@ Scaffold corriendo: podés sincronizar tu Steam y escribir reseñas. Single-user
   3. Documentar ejecución manual (`psql $SUPABASE_URL -f schema.sql` o Supabase SQL editor).
 - Referencia: `_CONCEPTO.md` líneas 32-72.
 
-### Tarea 3: Cliente Supabase con service role
+### Tarea 3: Cliente Supabase con service role ✅
 
 - Archivos: `src/db/supabase.ts` (nuevo), `src/db/index.ts` (nuevo)
 - Qué hacer:
@@ -52,7 +52,7 @@ Scaffold corriendo: podés sincronizar tu Steam y escribir reseñas. Single-user
   4. Tipos: derivar `Database` types de `schema.sql` (manual o `supabase gen types typescript`).
 - Referencia: `@supabase/supabase-js` docs.
 
-### Tarea 4: Cliente Steam Web API
+### Tarea 4: Cliente Steam Web API ✅
 
 - Archivos: `src/services/steam/client.ts` (nuevo), `src/services/steam/types.ts` (nuevo), `src/services/steam/index.ts` (nuevo)
 - Qué hacer:
@@ -63,7 +63,7 @@ Scaffold corriendo: podés sincronizar tu Steam y escribir reseñas. Single-user
   5. Timeout 10s por request.
 - Referencia: `https://developer.valvesoftware.com/wiki/Steam_Web_API`.
 
-### Tarea 5: Tool `sync_library`
+### Tarea 5: Tool `sync_library` ✅
 
 - Archivos: `src/tools/sync-library.tool.ts` (nuevo), `src/tools/index.ts` (registrar)
 - Qué hacer:
@@ -74,7 +74,7 @@ Scaffold corriendo: podés sincronizar tu Steam y escribir reseñas. Single-user
   5. Test con `InMemoryTransport` mockeando Steam client + Supabase client.
 - Referencia: `src/tools/greet.tool.ts` (patrón de tool).
 
-### Tarea 6: Cron diario
+### Tarea 6: Cron diario ✅
 
 - Archivos: `src/jobs/daily-sync.ts` (nuevo), `src/main.ts` (extender con bootstrap)
 - Qué hacer:
@@ -84,7 +84,7 @@ Scaffold corriendo: podés sincronizar tu Steam y escribir reseñas. Single-user
   4. Manejo de errores: log fatal pero NO mata el proceso.
 - Referencia: `node-cron` docs.
 
-### Tarea 7: Tool `review_game`
+### Tarea 7: Tool `review_game` ✅
 
 - Archivos: `src/tools/review-game.tool.ts` (nuevo), `src/tools/index.ts` (registrar)
 - Qué hacer:
@@ -96,7 +96,7 @@ Scaffold corriendo: podés sincronizar tu Steam y escribir reseñas. Single-user
   6. Annotations: `destructiveHint: false`, `idempotentHint: false` (cada call crea una reseña).
 - Referencia: `src/tools/sync-library.tool.ts` (patrón de DB).
 
-### Tarea 8: Tool `list_my_games` + test E2E
+### Tarea 8: Tool `list_my_games` + test E2E ✅
 
 - Archivos: `src/tools/list-my-games.tool.ts` (nuevo), `src/tools/index.ts` (registrar), `src/__tests__/e2e-fase1.spec.ts` (nuevo)
 - Qué hacer:
@@ -106,12 +106,12 @@ Scaffold corriendo: podés sincronizar tu Steam y escribir reseñas. Single-user
 
 ## Criterios de Aceptación
 
-- [ ] Schema SQL ejecutable en Supabase sin errores
-- [ ] `pnpm dev` arranca el server sin crash
-- [ ] `sync_library` invocado manualmente trae 1+ juegos de la cuenta Steam real (developer account `76561198020370213` del concepto)
-- [ ] `review_game` guarda reseña y devuelve ID
-- [ ] `list_my_games` devuelve lista filtrable
-- [ ] Cron se monta en producción pero NO en dev (sin `MCP_CRON_ENABLED`)
-- [ ] Test E2E pasa: sync → review → list con datos mockeados
-- [ ] `pnpm test` 100% verde
-- [ ] `pnpm lint` limpio
+- [ ] Schema SQL ejecutable en Supabase sin errores — verificado en Postgres 17 local; **falta correrlo en tu proyecto Supabase**
+- [x] `pnpm dev` arranca el server sin crash
+- [ ] `sync_library` invocado manualmente trae 1+ juegos de la cuenta Steam real (developer account `76561198020370213` del concepto) — **pendiente: requiere STEAM_API_KEY y Supabase reales**; cubierto con dobles (forma documentada de GetOwnedGames)
+- [x] `review_game` guarda reseña y devuelve ID — con dobles (repositorio contra cliente supabase-js real + fetch falso)
+- [x] `list_my_games` devuelve lista filtrable — con dobles
+- [x] Cron se monta en producción pero NO en dev (sin `MCP_CRON_ENABLED`) — verificado en runtime sobre el build
+- [x] Test E2E pasa: sync → review → list con datos mockeados
+- [x] `pnpm test` 100% verde
+- [x] `pnpm lint` limpio

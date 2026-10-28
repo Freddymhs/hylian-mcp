@@ -1,6 +1,6 @@
 # FASE 3: Polish + publicación
 
-**Status**: ⏸️ PENDIENTE
+**Status**: 🟡 IMPLEMENTADA CON DOBLES (2026-10-24) — `npm publish` NO ejecutado; faltan pruebas con cuenta real; desvíos en [`DECISION_FASE3_DESVIOS.md`](../decisions/DECISION_FASE3_DESVIOS.md)
 **Prioridad**: Baja
 **Dependencias**: FASE_2 (todas las features core funcionando)
 **Fuente**: `../_CONCEPTO.md` F3 (pasos 19-23)
@@ -11,7 +11,7 @@ Instalable via npm. Buscás juegos en tu DB. Backup automático. Listo para usar
 
 ## Tareas
 
-### Tarea 1: Tool `add_manual_game`
+### Tarea 1: Tool `add_manual_game` ✅
 
 - Archivos: `src/tools/add-manual-game.tool.ts` (nuevo)
 - Qué hacer:
@@ -20,7 +20,7 @@ Instalable via npm. Buscás juegos en tu DB. Backup automático. Listo para usar
   3. Si querés jugarlo, llamar después `list_my_games` no lo va a mostrar (no está en `user_library`) — diseño consciente: la tool es para catálogo, no para "lo que tenés".
   4. Annotations: `idempotentHint: false` (cada call crea una fila).
 
-### Tarea 2: Tool `search_games`
+### Tarea 2: Tool `search_games` ✅
 
 - Archivos: `src/tools/search-games.tool.ts` (nuevo)
 - Qué hacer:
@@ -29,7 +29,7 @@ Instalable via npm. Buscás juegos en tu DB. Backup automático. Listo para usar
   3. Devuelve hasta `limit` (default 20) con `name`, `source`, `steam_appid`, `tags`.
   4. Annotations: `readOnlyHint: true`.
 
-### Tarea 3: Setup `npm publish`
+### Tarea 3: Setup `npm publish` ✅
 
 - Archivos: `package.json`, `.npmignore` (nuevo), `README.md` (versión final)
 - Qué hacer:
@@ -44,7 +44,7 @@ Instalable via npm. Buscás juegos en tu DB. Backup automático. Listo para usar
   4. Test local: `npm pack` y verificar que el tarball no incluye secretos.
 - Referencia: `https://docs.npmjs.com/cli/v10/configuring-npm/package-json`.
 
-### Tarea 4: Backup automático (export JSON semanal)
+### Tarea 4: Backup automático (export JSON semanal) ✅
 
 - Archivos: `src/jobs/weekly-backup.ts` (nuevo), `src/main.ts` (registrar cron)
 - Qué hacer:
@@ -55,7 +55,7 @@ Instalable via npm. Buscás juegos en tu DB. Backup automático. Listo para usar
   5. Logging: success con path, error con razón.
   6. NO commitear backups al repo.
 
-### Tarea 5: Troubleshooting + docs de uso
+### Tarea 5: Troubleshooting + docs de uso ✅
 
 - Archivos: `README.md` (sección final), `docs/flows.md` (revisar y llenar)
 - Qué hacer:
@@ -67,10 +67,10 @@ Instalable via npm. Buscás juegos en tu DB. Backup automático. Listo para usar
 
 ## Criterios de Aceptación
 
-- [ ] `add_manual_game` persiste y `search_games` lo encuentra
-- [ ] `npm pack` produce tarball sin `src/` ni `.env*` ni `.claude/`
-- [ ] Backup se ejecuta según schedule y se puede restaurar manualmente desde el JSON
-- [ ] README tiene sección troubleshooting accionable
-- [ ] `docs/flows.md` tiene al menos 8 flujos probados y documentados
-- [ ] `pnpm test` 100% verde
-- [ ] `pnpm lint` limpio
+- [x] `add_manual_game` persiste y `search_games` lo encuentra — con dobles
+- [x] `npm pack` produce tarball sin `src/` ni `.env*` ni `.claude/` — auditado (82 archivos); **publish pendiente del dueño**
+- [x] Backup se ejecuta según schedule y se puede restaurar manualmente desde el JSON — schedule `0 3 * * 0` validado con node-cron, escritura y restauración probadas contra el filesystem
+- [x] README tiene sección troubleshooting accionable
+- [ ] `docs/flows.md` tiene al menos 8 flujos probados y documentados — 12 documentados y cubiertos por tests con dobles; **falta probarlos contra Supabase/Steam reales**
+- [x] `pnpm test` 100% verde
+- [x] `pnpm lint` limpio

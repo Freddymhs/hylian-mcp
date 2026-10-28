@@ -1,10 +1,15 @@
+#!/usr/bin/env node
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { env, TRANSPORT_HTTP } from '@config/index.js';
 import { logger } from '@common/logger.js';
+import { tryParseJson } from '@common/json.js';
+import { createServices } from '@services/index.js';
+import { startJobs } from '@jobs/index.js';
 import { createServer } from './server.js';
 
 async function main(): Promise<void> {
-  const server = createServer();
+  const services = createServices();
+  const server = createServer(services);
 
   if (env.transport === TRANSPORT_HTTP) {
     const { StreamableHTTPServerTransport } =
@@ -23,14 +28,12 @@ async function main(): Promise<void> {
         for await (const chunk of req) {
           chunks.push(chunk as Buffer);
         }
-        let body: unknown;
-        try {
-          body = JSON.parse(Buffer.concat(chunks).toString());
-        } catch {
+        const body = tryParseJson(Buffer.concat(chunks).toString());
+        if (!body.ok) {
           res.writeHead(400).end(JSON.stringify({ error: 'Invalid JSON' }));
           return;
         }
-        await transport.handleRequest(req, res, body);
+        await transport.handleRequest(req, res, body.value);
       } else {
         res.writeHead(404).end();
       }
@@ -46,6 +49,8 @@ async function main(): Promise<void> {
     await server.connect(transport);
     logger.info('MCP server running via stdio');
   }
+
+  startJobs({ services });
 }
 
 main().catch((error: unknown) => {

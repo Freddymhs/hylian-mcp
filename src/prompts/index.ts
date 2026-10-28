@@ -1,6 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { registerSummarizePrompt } from './summarize.prompt.js';
 
-export function registerPrompts(server: McpServer): void {
-  registerSummarizePrompt(server);
+export function registerPrompts(_server: McpServer): void {
+  // No product prompts yet
 }

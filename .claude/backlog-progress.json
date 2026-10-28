@@ -1,35 +1,47 @@
 {
   "project": "hylian-mcp",
   "tech": "node22-typescript-mcp-supabase",
-  "current_phase": "FASE_0",
+  "current_phase": "DONE_WITH_DOUBLES",
   "phases": {
     "FASE_0": {
-      "status": "pending",
-      "tasks": 0,
+      "status": "done",
+      "tasks": 7,
       "total": 7,
       "name": "Limpieza de scaffold"
     },
     "FASE_1": {
-      "status": "pending",
-      "tasks": 0,
+      "status": "implemented_with_doubles",
+      "tasks": 8,
       "total": 8,
-      "name": "MVP funcional"
+      "name": "MVP funcional",
+      "pending_real_credentials": [
+        "schema en Supabase real",
+        "sync_library con cuenta Steam real",
+        "review_game/list_my_games contra Supabase real"
+      ]
     },
     "FASE_2": {
-      "status": "pending",
-      "tasks": 0,
+      "status": "implemented_with_doubles",
+      "tasks": 7,
       "total": 7,
-      "name": "Recomendaciones + edición"
+      "name": "Recomendaciones + edición",
+      "pending_real_credentials": [
+        "recommend_purchase con cuenta real y Steam Store real"
+      ]
     },
     "FASE_3": {
-      "status": "pending",
-      "tasks": 0,
+      "status": "implemented_with_doubles",
+      "tasks": 5,
       "total": 5,
-      "name": "Polish + publicación"
+      "name": "Polish + publicación",
+      "pending_real_credentials": [
+        "flujos de docs/flows.md contra Supabase y Steam reales"
+      ],
+      "pending_owner": ["npm publish"]
     }
   },
   "totals": {
-    "tasks_done": 0,
+    "tasks_done": 27,
     "tasks_total": 27
   },
   "meta": {

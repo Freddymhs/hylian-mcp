@@ -1,260 +1,118 @@
-# template-mcp
+# hylian-mcp
 
-MCP (Model Context Protocol) server template with TypeScript, Zod validation, and dual transport support (stdio/HTTP). Compatible with any MCP client: Claude Code, Claude Desktop, Cursor, VS Code Copilot, Windsurf, Cline, and more.
+MCP server personal (single-user, local-first) para gestionar tu biblioteca de gaming.
+Escribís reseñas de los juegos que jugás; el sistema deriva tu perfil de gustos y recomienda qué comprar.
+Sincroniza con la Steam Web API, guarda en Supabase y usa el LLM de tu cliente MCP (Claude Code,
+OpenCode, Cursor…) — no trae LLM propio.
 
-## Features
+## Instalación
 
-- **Dual transport**: stdio (local) and Streamable HTTP (remote)
-- **TypeScript strict** with ESM modules
-- **Zod validation** for tool input schemas
-- **Joi env validation** (fail-fast on startup)
-- **Pino logging** to stderr (stdio-safe)
-- **Modular architecture**: tools, resources, and prompts as separate modules
-- **Factory pattern**: `createServer()` for testability
-- **Full test suite** with MCP SDK in-memory transport
-- **Quality tooling**: ESLint + Prettier + Husky + lint-staged
-- **Docker ready**: multi-stage build
-- **CI/CD**: GitHub Actions pipeline
+Requiere Node.js 22.19+ y un proyecto de [Supabase](https://supabase.com) (free tier alcanza).
 
-## Quick Start
+1. **Schema**: en Supabase, _SQL Editor_ → pegá y ejecutá [`src/db/schema.sql`](src/db/schema.sql)
+   (dentro del paquete npm: `dist/db/schema.sql`). Si tu base viene de la versión anterior a las reseñas
+   borrables, aplicá además `src/db/migrations/0002_reviews_soft_delete.sql`.
+2. **Claves**: Supabase _Project Settings → API_ (URL y `service_role` / `sb_secret_…`), Steam
+   [Web API key](https://steamcommunity.com/dev/apikey) y tu [SteamID64](https://steamid.io). En Steam, el perfil
+   debe tener los _game details_ públicos.
+3. **`USER_ID`**: un UUID cualquiera que elegís una vez y conservás
+   (`node -e "console.log(crypto.randomUUID())"`).
+4. **Registrar el server** en tu cliente MCP:
+
+```bash
+claude mcp add --scope user hylian-mcp \
+  --env NODE_ENV=production \
+  --env SUPABASE_URL=https://xxxx.supabase.co \
+  --env SUPABASE_SERVICE_KEY=... \
+  --env USER_ID=... \
+  --env STEAM_API_KEY=... \
+  --env STEAM_ID=... \
+  -- npx -y @fmarcosdev/hylian-mcp
+```
+
+`NODE_ENV=production` importa: oculta las tools de ejemplo (`greet`, `summarize`, `server-info`) y monta los
+jobs diarios/semanales. Sin él, el sync y el backup no corren solos.
+
+> El paquete todavía no está publicado en npm. Mientras tanto: clonar, `pnpm install`, `pnpm build` y usar
+> `node /ruta/absoluta/dist/main.js` como comando.
+
+## Configuración
+
+| Variable               | Obligatoria | Descripción                                                        |
+| ---------------------- | ----------- | ------------------------------------------------------------------ |
+| `SUPABASE_URL`         | sí          | URL del proyecto, `https://<ref>.supabase.co`                      |
+| `SUPABASE_SERVICE_KEY` | sí          | `service_role` (JWT) o `sb_secret_…`. Bypasea RLS: no la compartas |
+| `USER_ID`              | sí          | UUID que scopea tu biblioteca, reseñas y perfil                    |
+| `STEAM_API_KEY`        | sync        | 32 caracteres hex                                                  |
+| `STEAM_ID`             | sync        | SteamID64, 17 dígitos                                              |
+| `NODE_ENV`             | no          | `production` para uso normal (default `development`)               |
+| `MCP_CRON_ENABLED`     | no          | `true` monta los jobs también en desarrollo                        |
+| `MCP_TRANSPORT`        | no          | `stdio` (default) o `http`                                         |
+| `PORT`                 | no          | Puerto del transporte `http` (default 3000)                        |
+| `LOG_LEVEL`            | no          | `trace`…`fatal`, `silent` (default `info`; logs a stderr)          |
+| `XDG_DATA_HOME`        | no          | Cambia dónde van los backups (ver abajo)                           |
+
+Ejemplo de `.env` para desarrollo (`pnpm dev` lo carga solo; ver [`.env.example`](.env.example)):
+
+```bash
+NODE_ENV=development
+SUPABASE_URL=https://abcdefghijklmnop.supabase.co
+SUPABASE_SERVICE_KEY=sb_secret_xxxxxxxxxxxxxxxxxxxxxxxx
+USER_ID=3f0c2a94-6a43-4a43-9c6e-0c6f3b9a7d11
+STEAM_API_KEY=0123456789abcdef0123456789abcdef
+STEAM_ID=76561198000000000
+```
+
+## Tools
+
+| Tool                 | Qué hace                                                                      |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `sync_library`       | Trae tus juegos de Steam (upsert; seguro de re-ejecutar)                      |
+| `review_game`        | Guarda una reseña (rank 0-100 y tags opcionales)                              |
+| `edit_review`        | Cambia texto, rank o tags de una reseña                                       |
+| `delete_review`      | Borra una reseña (soft delete)                                                |
+| `list_my_games`      | Lista tu biblioteca; filtra jugados/no jugados, ordena por nombre/horas/fecha |
+| `search_games`       | Busca en el catálogo por nombre, tag o género                                 |
+| `add_manual_game`    | Agrega un juego no-Steam al catálogo                                          |
+| `delete_game`        | Borra un juego con su biblioteca y reseñas (pide confirmación)                |
+| `recommend_purchase` | Recomienda compras según tu perfil; consulta la Steam Store                   |
+
+Jobs (solo con `NODE_ENV=production` o `MCP_CRON_ENABLED=true`, y mientras el cliente MCP tenga el server abierto):
+sync diario a las 04:00 y backup de reseñas los domingos a las 03:00 en
+`~/.hylian-mcp/backups/reviews-AAAA-MM-DD.json` (o `$XDG_DATA_HOME/hylian-mcp/backups/`), últimos 12.
+
+## Troubleshooting
+
+| Síntoma                                                                                       | Causa y arreglo                                                                                                                                                                                      |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Config validation error: SUPABASE_URL: Invalid url` y el server no arranca                   | La URL debe ser la del proyecto (`https://<ref>.supabase.co`), con protocolo y sin `/rest/v1`. Copiala de _Project Settings → API_.                                                                  |
+| `Steam error: Steam rejected the request (HTTP 403): check STEAM_API_KEY`                     | Key inválida, revocada o rotada. Generá otra en steamcommunity.com/dev/apikey y actualizá `STEAM_API_KEY`. Si es de formato (`must be 32 hex characters`), revisá que no tenga espacios ni comillas. |
+| `Steam returned no library data: the profile game details are private…`                       | Steam → Perfil → _Edit Profile_ → _Privacy Settings_ → _Game details_: **Public**. O `STEAM_ID` pertenece a otra cuenta.                                                                             |
+| `Database error (…): Could not find the table 'public.games' in the schema cache`             | `schema.sql` no se ejecutó en ese proyecto. Corrélo en el SQL Editor. Si dice `column reviews.deleted_at does not exist`, aplicá `migrations/0002_reviews_soft_delete.sql`.                          |
+| `Config validation error: USER_ID: Invalid uuid` o `Missing environment variable(s): USER_ID` | `USER_ID` debe ser un UUID. Generá uno y **no lo cambies**: cambiarlo deja tu biblioteca y reseñas viejas bajo el id anterior.                                                                       |
+| `MCP_TRANSPORT: Invalid enum value. Expected 'stdio' \| 'http'`, o el cliente no conecta      | Valores válidos: `stdio` / `http`. Los clientes locales (Claude Code, Cursor) usan `stdio`: no definas `MCP_TRANSPORT=http` salvo que el cliente apunte a `http://localhost:<PORT>/mcp`.             |
+| Aparecen `greet`, `summarize` o `server-info`                                                 | Falta `NODE_ENV=production` en la config del cliente.                                                                                                                                                |
+| `recommend_purchase` devuelve pocos resultados o `HTTP 429`                                   | La Steam Store no es una API oficial y limita el ritmo: reintentá en unos minutos. Los tags de tus reseñas rinden más si se parecen a los géneros de Steam (`rpg`, `platformer`, `souls-like`).      |
+
+Los logs van a stderr (stdout es el canal MCP); `LOG_LEVEL` ajusta el detalle.
+
+## Desarrollo
 
 ```bash
 pnpm install
-pnpm dev
+cp .env.example .env
+pnpm dev          # tsx watch, carga .env
+pnpm test         # vitest, sin red ni credenciales
+pnpm lint && pnpm type-check
+pnpm build        # limpia dist/, compila y copia el SQL
 ```
 
-## Scripts
+- [`docs/_CONCEPTO.md`](docs/_CONCEPTO.md) — especificación: dominio, schema, stack.
+- [`docs/backlog/`](docs/backlog/) — fases y estado de implementación.
+- [`docs/decisions/`](docs/decisions/) — por qué el código se aparta del backlog donde lo hace.
+- [`docs/flows.md`](docs/flows.md) — flujos de usuario paso a paso.
+- [`CLAUDE.md`](CLAUDE.md) — arquitectura y convenciones para quien contribuya.
 
-| Script            | Description                          |
-| ----------------- | ------------------------------------ |
-| `pnpm dev`        | Start with hot reload (tsx watch)    |
-| `pnpm build`      | Compile TypeScript + resolve aliases |
-| `pnpm start`      | Run compiled server                  |
-| `pnpm test`       | Run tests                            |
-| `pnpm lint`       | Lint source code                     |
-| `pnpm type-check` | Type check without emit              |
+## Licencia
 
-## Configuration
-
-Copy `.env.example` to `.env` and adjust:
-
-| Variable        | Default       | Description                           |
-| --------------- | ------------- | ------------------------------------- |
-| `MCP_TRANSPORT` | `stdio`       | Transport: `stdio` or `http`          |
-| `PORT`          | `3000`        | HTTP port (only for `http` transport) |
-| `LOG_LEVEL`     | `info`        | Pino log level                        |
-| `NODE_ENV`      | `development` | Environment                           |
-
-## Project Structure
-
-```
-src/
-├── main.ts              # Entrypoint: transport selection
-├── server.ts            # createServer() factory
-├── config/              # Env validation + constants
-├── common/              # Logger, error helpers, types
-├── tools/               # MCP tools (callable by LLMs)
-├── resources/           # MCP resources (read-only data)
-└── prompts/             # MCP prompts (reusable templates)
-```
-
-## Adding a New Tool
-
-1. Create `src/tools/my-tool.tool.ts`:
-
-```typescript
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
-
-export function registerMyTool(server: McpServer): void {
-  server.registerTool(
-    'my_tool',
-    {
-      title: 'My Tool',
-      description: 'What this tool does',
-      inputSchema: {
-        param: z.string().describe('Parameter description'),
-      },
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: false,
-      },
-    },
-    async ({ param }) => ({
-      content: [{ type: 'text', text: `Result: ${param}` }],
-    }),
-  );
-}
-```
-
-2. Register in `src/tools/index.ts`:
-
-```typescript
-import { registerMyTool } from './my-tool.tool.js';
-
-export function registerTools(server: McpServer): void {
-  registerGreetTool(server);
-  registerMyTool(server); // add here
-}
-```
-
-3. Add tests in `src/tools/__tests__/my-tool.tool.spec.ts`
-
-## Client Configuration
-
-### Claude Code
-
-Add to `.claude/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "template-mcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/template-mcp/dist/main.js"]
-    }
-  }
-}
-```
-
-### Claude Desktop
-
-Add to `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "template-mcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/template-mcp/dist/main.js"]
-    }
-  }
-}
-```
-
-### Cursor
-
-Add to Cursor Settings > MCP Servers:
-
-```json
-{
-  "mcpServers": {
-    "template-mcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/template-mcp/dist/main.js"]
-    }
-  }
-}
-```
-
-### VS Code (Copilot)
-
-Add to `.vscode/settings.json`:
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "template-mcp": {
-        "command": "node",
-        "args": ["/absolute/path/to/template-mcp/dist/main.js"]
-      }
-    }
-  }
-}
-```
-
-## Docker
-
-```bash
-# Build
-docker build -t template-mcp .
-
-# Run (HTTP mode, used for remote access)
-docker run -p 3000:3000 template-mcp
-```
-
-## Tech Stack
-
-- Node.js 22 + TypeScript (strict, ESM)
-- MCP SDK v1 (`@modelcontextprotocol/sdk`)
-- Zod (tool input validation)
-- Joi (env validation)
-- Pino (stderr logging)
-- Vitest (testing)
-- ESLint + Prettier + Husky
-
----
-
-## Verificación
-
-Todo lo siguiente está comprobado y funcionando al 100%.
-
-### Calidad de código
-
-| Check               | Comando           |
-| ------------------- | ----------------- |
-| Lint + formato      | `pnpm lint`       |
-| Tipado estricto     | `pnpm type-check` |
-| Build (tsc + alias) | `pnpm build`      |
-
-### Tests unitarios (11/11)
-
-```bash
-pnpm test
-```
-
-| Suite                              | Cubre                                                                |
-| ---------------------------------- | -------------------------------------------------------------------- |
-| `greet.tool.spec.ts` (5)           | Listado, estilos casual/formal/enthusiastic, rechazo de nombre vacío |
-| `server-info.resource.spec.ts` (2) | Listado, campos JSON (name, version, uptime, timestamp)              |
-| `summarize.prompt.spec.ts` (4)     | Listado, estilos brief/bullet-points, coerción numérica, defaults    |
-
-Sin red ni puertos — usa `InMemoryTransport` del SDK.
-
-### Runtime — transporte stdio (modo por defecto)
-
-```bash
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' \
-  | MCP_TRANSPORT=stdio node dist/main.js
-```
-
-Respuesta JSON-RPC en stdout, logs en stderr.
-
-### Runtime — transporte HTTP
-
-```bash
-MCP_TRANSPORT=http PORT=3100 node dist/main.js &
-# Initialize → capturar Mcp-Session-Id del header
-# tools/list, resources/list, prompts/list, tools/call greet, resources/read info://server
-```
-
-| Endpoint verificado                                     | Resultado esperado                                     |
-| ------------------------------------------------------- | ------------------------------------------------------ |
-| `tools/call greet` `{"name":"Freddy","style":"casual"}` | `"Hey Freddy! How's it going?"`                        |
-| `resources/read info://server`                          | JSON con name, version, uptime, nodeVersion, timestamp |
-
-### Docker
-
-```bash
-docker build -t template-mcp .  # multi-stage: base → deps → build → production
-docker run -p 3000:3000 template-mcp  # arranca en HTTP mode
-```
-
-### CI (GitHub Actions)
-
-`pnpm install` → `pnpm lint` → `pnpm build` → `pnpm test`  
-Corre en cada push y PR a main/master.
-
-### Pipeline de commits (local)
-
-`git commit` → husky → lint-staged → `eslint --fix` + `prettier --write` (solo archivos staged)
-
-### Gaps conocidos
-
-- **HTTP transport sin tests automáticos** _(medio)_: los unit tests usan `InMemoryTransport`; el transporte HTTP (`StreamableHTTPServerTransport`) solo se verificó manualmente con curl. Para producción remota añadir tests de integración con sesión real
-- **Integración con cliente MCP** _(medio)_: verificar manualmente agregando a `.claude/settings.json` o Cursor y confirmando que tools/resources/prompts aparecen en el cliente
-- **Tool inputs extremos** _(bajo)_: strings muy largos, unicode malformado — Zod los rechaza pero el error response no está testeado vía HTTP
-- **Sesiones concurrentes** _(bajo)_: fuera del scope de un template
+[MIT](LICENSE)

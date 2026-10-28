@@ -1,9 +1,10 @@
-export interface TextContent {
+// `type` aliases (not interfaces): the MCP SDK's tool result requires an index signature.
+export type TextContent = {
   type: 'text';
   text: string;
-}
+};
 
-export interface ToolResult {
+export type ToolResult = {
   content: TextContent[];
   isError?: boolean;
-}
+};

@@ -1,6 +1,6 @@
 # FASE 2: Recomendaciones + edición
 
-**Status**: ⏸️ PENDIENTE
+**Status**: 🟡 IMPLEMENTADA CON DOBLES (2026-10-24) — falta la verificación con cuenta real; criterios en [`DECISION_FASE2_DESVIOS.md`](../decisions/DECISION_FASE2_DESVIOS.md)
 **Prioridad**: Media
 **Dependencias**: FASE_1 (review_game + sync_library funcionando)
 **Fuente**: `../_CONCEPTO.md` F2 (pasos 11-18), consolidados en 7 tareas
@@ -21,7 +21,7 @@ Podés editar/eliminar reseñas y juegos, y el sistema te recomienda compras bas
 
 ## Tareas
 
-### Tarea 1: Provider pattern
+### Tarea 1: Provider pattern ✅
 
 - Archivos: `src/providers/types.ts` (nuevo), `src/providers/steam.provider.ts` (nuevo), `src/providers/manual.provider.ts` (nuevo), `src/providers/index.ts` (nuevo)
 - Qué hacer:
@@ -32,7 +32,7 @@ Podés editar/eliminar reseñas y juegos, y el sistema te recomienda compras bas
   5. Tests unitarios por provider + test de orquestación.
 - Referencia: `_CONCEPTO.md` líneas 76-89 (interface).
 
-### Tarea 2: Tool `edit_review`
+### Tarea 2: Tool `edit_review` ✅
 
 - Archivos: `src/tools/edit-review.tool.ts` (nuevo)
 - Qué hacer:
@@ -40,7 +40,7 @@ Podés editar/eliminar reseñas y juegos, y el sistema te recomienda compras bas
   2. Update en `reviews` con `updated_at = NOW()`. Validar ownership (user_id match).
   3. Annotations: `destructiveHint: false`, `idempotentHint: true`.
 
-### Tarea 3: Tool `delete_review`
+### Tarea 3: Tool `delete_review` ✅
 
 - Archivos: `src/tools/delete-review.tool.ts` (nuevo)
 - Qué hacer:
@@ -48,7 +48,7 @@ Podés editar/eliminar reseñas y juegos, y el sistema te recomienda compras bas
   2. Delete con validación de ownership. Soft delete (`deleted_at` column) — agregar migration si no existe.
   3. Annotations: `destructiveHint: true`, `idempotentHint: false`.
 
-### Tarea 4: Tool `delete_game`
+### Tarea 4: Tool `delete_game` ✅
 
 - Archivos: `src/tools/delete-game.tool.ts` (nuevo)
 - Qué hacer:
@@ -56,7 +56,7 @@ Podés editar/eliminar reseñas y juegos, y el sistema te recomienda compras bas
   2. Cascade delete: `user_library` + `reviews` asociadas (ya está en schema por FK CASCADE).
   3. Annotations: `destructiveHint: true`. Confirmación: el LLM del cliente debe pedir confirmación al usuario antes de invocar.
 
-### Tarea 5: Profile aggregation
+### Tarea 5: Profile aggregation ✅
 
 - Archivos: `src/services/profile/aggregate.ts` (nuevo), `src/services/profile/types.ts` (nuevo)
 - Qué hacer:
@@ -67,7 +67,7 @@ Podés editar/eliminar reseñas y juegos, y el sistema te recomienda compras bas
   5. Tests con dataset fijo de reseñas.
 - Referencia: schema `user_profile` en `_CONCEPTO.md` línea 67-72.
 
-### Tarea 6: Scoring algorithm
+### Tarea 6: Scoring algorithm ✅
 
 - Archivos: `src/services/recommend/score.ts` (nuevo)
 - Qué hacer:
@@ -78,7 +78,7 @@ Podés editar/eliminar reseñas y juegos, y el sistema te recomienda compras bas
   5. Devuelve top-N ordenados por score.
   6. Tests: perfil conocido → set de candidatos conocido → ranking esperado.
 
-### Tarea 7: Tool `recommend_purchase`
+### Tarea 7: Tool `recommend_purchase` ✅
 
 - Archivos: `src/tools/recommend-purchase.tool.ts` (nuevo)
 - Qué hacer:
@@ -91,10 +91,10 @@ Podés editar/eliminar reseñas y juegos, y el sistema te recomienda compras bas
 
 ## Criterios de Aceptación
 
-- [ ] `edit_review` actualiza y refresca `updated_at`
-- [ ] `delete_review` y `delete_game` son cascade-safe
-- [ ] Profile aggregation con 5+ reseñas fake devuelve `tag_weights` razonable
-- [ ] Scoring rankea correctamente con dataset controlado
-- [ ] `recommend_purchase` con tu cuenta real (50+ juegos, 10+ reseñas) devuelve 5+ sugerencias con scores >50
-- [ ] `pnpm test` 100% verde (incluye nuevos tests)
-- [ ] `pnpm lint` limpio
+- [x] `edit_review` actualiza y refresca `updated_at`
+- [x] `delete_review` y `delete_game` son cascade-safe — soft delete + cascade por FK, verificado en Postgres 17 local
+- [x] Profile aggregation con 5+ reseñas fake devuelve `tag_weights` razonable
+- [x] Scoring rankea correctamente con dataset controlado
+- [ ] `recommend_purchase` con tu cuenta real (50+ juegos, 10+ reseñas) devuelve 5+ sugerencias con scores >50 — **pendiente: requiere Supabase y Steam reales**; cubierto con dobles. Ojo: el score es relativo al mejor candidato
+- [x] `pnpm test` 100% verde (incluye nuevos tests)
+- [x] `pnpm lint` limpio
