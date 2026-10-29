@@ -107,6 +107,19 @@ pnpm lint && pnpm type-check
 pnpm build        # limpia dist/, compila y copia el SQL
 ```
 
+**Supabase local** (Docker + [Supabase CLI](https://supabase.com/docs/guides/local-development)): el mismo código,
+sin proyecto en la nube. `supabase/config.toml` carga `src/db/schema.sql` en la base nueva y deja apagados los
+servicios que el server no usa.
+
+```bash
+supabase start                 # API en http://127.0.0.1:54321
+supabase status -o env         # SECRET_KEY → SUPABASE_SERVICE_KEY en .env
+supabase db reset              # base limpia, vuelve a cargar schema.sql
+```
+
+Pasar a la nube es cambiar `SUPABASE_URL` y `SUPABASE_SERVICE_KEY` en `.env` y correr el schema allá (Instalación,
+paso 1).
+
 - [`docs/_CONCEPTO.md`](docs/_CONCEPTO.md) — especificación: dominio, schema, stack.
 - [`docs/backlog/`](docs/backlog/) — fases y estado de implementación.
 - [`docs/decisions/`](docs/decisions/) — por qué el código se aparta del backlog donde lo hace.
