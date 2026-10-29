@@ -9,6 +9,7 @@ import { registerDeleteGameTool } from './delete-game.tool.js';
 import { registerRecommendPurchaseTool } from './recommend-purchase.tool.js';
 import { registerAddManualGameTool } from './add-manual-game.tool.js';
 import { registerSearchGamesTool } from './search-games.tool.js';
+import { registerRankGamesTool } from './rank-games.tool.js';
 
 export function registerTools(server: McpServer, services: Services): void {
   registerSyncLibraryTool(server, services);
@@ -20,4 +21,5 @@ export function registerTools(server: McpServer, services: Services): void {
   registerRecommendPurchaseTool(server, services);
   registerAddManualGameTool(server, services);
   registerSearchGamesTool(server, services);
+  registerRankGamesTool(server, services);
 }

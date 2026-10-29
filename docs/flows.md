@@ -41,7 +41,7 @@
 
 **Resultado esperado:**
 
-- El cliente lista 9 tools: `sync_library`, `review_game`, `edit_review`, `delete_review`, `list_my_games`, `search_games`, `add_manual_game`, `delete_game`, `recommend_purchase`. Sin `greet` ni prompts/resources de ejemplo.
+- El cliente lista 10 tools: `sync_library`, `review_game`, `edit_review`, `delete_review`, `list_my_games`, `search_games`, `add_manual_game`, `delete_game`, `recommend_purchase`, `rank_games`. Sin `greet` ni prompts/resources de ejemplo.
 
 **Casos borde:**
 
@@ -231,6 +231,31 @@ _Respaldo: `src/services/recommend/__tests__/*.spec.ts`, `src/tools/__tests__/re
 - Gratis cuenta como 0. Sin resultados: lista vacía, no error.
 
 _Respaldo: `recommend.spec.ts` ("honours maxPrice", "uses the criteria as the only search term")._
+
+---
+
+### [Flujo: rankear una lista propia]
+
+**Precondiciones:**
+
+- Al menos una reseña con `extractedTags`.
+
+**Pasos:**
+
+1. Usuario pega una lista ("¿cuáles de estos ports VR me gustarían?").
+2. El LLM invoca `rank_games` con `games: [{ name, tags }]`, infiriendo los tags de cada juego.
+
+**Resultado esperado:**
+
+- `{ ranked: [{ name, score, matchedTags }], unmatched: [name] }`. No guarda nada ni consulta ninguna tienda.
+
+**Casos borde:**
+
+- Sin reseñas con tags: el mismo error que `recommend_purchase`.
+- `unmatched` = sin tags en común con el perfil: desconocido, no disgusto.
+- `score` es relativo al mejor de esa lista.
+
+_Respaldo: `src/tools/__tests__/rank-games.tool.spec.ts`. Probado 2026-10-28 por stdio contra Supabase local._
 
 ---
 

@@ -10,3 +10,5 @@ export const MAX_GAME_TAGS = 30;
 export const MAX_SEARCH_QUERY_LENGTH = 100;
 export const DEFAULT_SEARCH_LIMIT = 20;
 export const MAX_SEARCH_LIMIT = 100;
+
+export const MAX_RANK_GAMES = 100;

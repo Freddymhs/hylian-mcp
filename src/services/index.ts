@@ -14,6 +14,7 @@ export type { LibrarySortKey } from './library-listing.js';
 export type { ServiceError, ServiceErrorKind } from './errors.js';
 export { computeTagWeights, createProfileService } from './profile/index.js';
 export {
+  rankGames,
   recommendPurchases,
   scoreCandidates,
   DEFAULT_RECOMMENDATIONS,

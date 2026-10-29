@@ -76,6 +76,7 @@ STEAM_ID=76561198000000000
 | `add_manual_game`    | Agrega un juego no-Steam al catálogo                                          |
 | `delete_game`        | Borra un juego con su biblioteca y reseñas (pide confirmación)                |
 | `recommend_purchase` | Recomienda compras según tu perfil; consulta la Steam Store                   |
+| `rank_games`         | Ordena una lista que traés (ports VR, emuladores…) según tu perfil            |
 
 Jobs (solo con `NODE_ENV=production` o `MCP_CRON_ENABLED=true`, y mientras el cliente MCP tenga el server abierto):
 sync diario a las 04:00 y backup de reseñas los domingos a las 03:00 en

@@ -24,6 +24,29 @@ export interface ScoreInput {
   limit: number;
 }
 
+export interface ProfileMatch {
+  /** Profile tags found in the game's tags, heaviest first. */
+  matchedTags: string[];
+  /** Σ tag_weights[tag] over matchedTags. */
+  raw: number;
+}
+
+export function matchProfile(
+  tags: readonly string[],
+  tagWeights: TagWeights,
+): ProfileMatch {
+  const matchedTags = tags
+    .filter((tag) => tag in tagWeights)
+    .sort((a, b) => (tagWeights[b] ?? 0) - (tagWeights[a] ?? 0));
+  const raw = matchedTags.reduce((sum, tag) => sum + (tagWeights[tag] ?? 0), 0);
+  return { matchedTags, raw };
+}
+
+// The best raw score of a run becomes MAX_SCORE.
+export function toRelativeScore(raw: number, best: number): number {
+  return Math.round((raw / best) * MAX_SCORE);
+}
+
 export function isOwned(
   { steamAppId, name }: Game,
   owned: OwnedGames,
@@ -32,8 +55,7 @@ export function isOwned(
   return ownedByAppId || owned.names.has(normalizeTag(name));
 }
 
-// raw(game) = Σ tag_weights[tag] over the candidate's tags that are in the profile.
-// The best raw score becomes 100; a candidate that shares no tag with the profile is not recommended.
+// A candidate that shares no tag with the profile is not recommended.
 export function scoreCandidates({
   tagWeights,
   candidates,
@@ -42,16 +64,7 @@ export function scoreCandidates({
 }: ScoreInput): ScoredGame[] {
   const scored = candidates
     .filter((game) => !isOwned(game, owned))
-    .map((game) => {
-      const matchedTags = game.tags
-        .filter((tag) => tag in tagWeights)
-        .sort((a, b) => (tagWeights[b] ?? 0) - (tagWeights[a] ?? 0));
-      const raw = matchedTags.reduce(
-        (sum, tag) => sum + (tagWeights[tag] ?? 0),
-        0,
-      );
-      return { game, matchedTags, raw };
-    })
+    .map((game) => ({ game, ...matchProfile(game.tags, tagWeights) }))
     .filter(({ raw }) => raw > 0);
 
   const best = Math.max(0, ...scored.map(({ raw }) => raw));
@@ -60,7 +73,7 @@ export function scoreCandidates({
       game,
       matchedTags,
       raw,
-      score: Math.round((raw / best) * MAX_SCORE),
+      score: toRelativeScore(raw, best),
     }))
     .sort((a, b) => b.raw - a.raw || a.game.name.localeCompare(b.game.name))
     .slice(0, limit)

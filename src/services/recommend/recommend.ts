@@ -14,6 +14,7 @@ import {
   MAX_DETAIL_CANDIDATES,
   SEARCH_TERMS_FROM_PROFILE,
 } from './constants.js';
+import { loadTagWeights } from './tag-weights.js';
 import { isOwned, scoreCandidates } from './score.js';
 import type { ScoredGame } from './score.js';
 
@@ -65,18 +66,11 @@ export async function recommendPurchases(
   { profile, providers, library, games }: RecommendDeps,
   { criteria, maxPrice, limit }: RecommendRequest,
 ): Promise<Result<Recommendation, ServiceError>> {
-  const snapshot = await profile.get();
-  if (!snapshot.ok) {
-    return err(snapshot.error);
+  const weights = await loadTagWeights(profile);
+  if (!weights.ok) {
+    return err(weights.error);
   }
-  const { tagWeights } = snapshot.value;
-  if (Object.keys(tagWeights).length === 0) {
-    return err({
-      kind: 'not_found',
-      message:
-        'No tagged reviews yet: write reviews with review_game (including extractedTags) so a taste profile can be built',
-    });
-  }
+  const tagWeights = weights.value;
 
   const owned = await library.list('all');
   if (!owned.ok) {
