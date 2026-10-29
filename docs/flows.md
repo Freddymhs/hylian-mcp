@@ -2,14 +2,14 @@
 
 > Describe cómo funciona la app para el usuario final.
 >
-> Última actualización: 2026-10-28
+> Última actualización: 2026-10-29
 >
 > **Estado de verificación:** cada flujo está cubierto por tests automáticos con dobles (Supabase vía cliente real
-> con `fetch` falso, Steam vía `MockAgent`, tools vía `InMemoryTransport`). **2026-10-28, contra Supabase local**
+> con `fetch` falso, Steam vía `MockAgent`, tools vía `InMemoryTransport`). **2026-10-28/29, contra Supabase local**
 > (`supabase start`) con el build por stdio: pasan reseñas (escribir, editar, borrar), catálogo y búsqueda,
-> `delete_game`, el backup (solo reseñas activas, `0600`) y `recommend_purchase` contra la Steam Store real.
-> **Falta:** `sync_library` (necesita `STEAM_API_KEY`) y repetir todo en un proyecto Supabase en la nube. Cada flujo
-> cita el spec que lo respalda.
+> `delete_game`, el backup (solo reseñas activas, `0600`), `recommend_purchase` contra la Steam Store real,
+> `rank_games` y `sync_library` contra la Steam Web API real (219 juegos; el re-sync trae 0 nuevos).
+> **Falta:** repetirlo en un proyecto Supabase en la nube. Cada flujo cita el spec que lo respalda.
 
 ---
 

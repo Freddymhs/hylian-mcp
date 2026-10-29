@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `@fmarcosdev/hylian-mcp` — MCP server (single-user, local-first) for managing a personal Steam gaming library. The product spec lives in `docs/_CONCEPTO.md` and defines F1-F3. Cross-check product claims in `README.md` against `_CONCEPTO.md`.
 
-Current code state: F1-F3 are implemented and tested with doubles (Supabase through the real supabase-js client over a fake `fetch`, Steam through undici `MockAgent`). Since 2026-10-28 every tool except `sync_library` (needs `STEAM_API_KEY`) also ran against Supabase local (`supabase start`, see README → Desarrollo; status in `docs/flows.md`); nothing has run against a cloud Supabase project or the Steam Web API yet, and nothing is published to npm. Where the code departs from the backlog, `docs/decisions/DECISION_FASE{0,1,2,3}_DESVIOS.md` says why. The placeholders (`greet`, `summarize`, `server-info`) live in `src/examples/` and are registered only when `NODE_ENV !== 'production'`.
+Current code state: F1-F3 are implemented and tested with doubles (Supabase through the real supabase-js client over a fake `fetch`, Steam through undici `MockAgent`). Since 2026-10-29 every tool also ran against Supabase local (`supabase start`, see README → Desarrollo) and the real Steam Web API/Store (status in `docs/flows.md`); nothing has run against a cloud Supabase project yet, and nothing is published to npm. Where the code departs from the backlog, `docs/decisions/DECISION_FASE{0,1,2,3}_DESVIOS.md` says why. The placeholders (`greet`, `summarize`, `server-info`) live in `src/examples/` and are registered only when `NODE_ENV !== 'production'`.
 
 ## Source of truth hierarchy
 
