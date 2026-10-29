@@ -12,12 +12,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Freddymhs/hylian-mcp.git"
+    "url": "git+https://github.com/fmarcos-labs/hylian-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/Freddymhs/hylian-mcp/issues"
+    "url": "https://github.com/fmarcos-labs/hylian-mcp/issues"
   },
-  "homepage": "https://github.com/Freddymhs/hylian-mcp#readme",
+  "homepage": "https://github.com/fmarcos-labs/hylian-mcp#readme",
   "type": "module",
   "main": "dist/main.js",
   "bin": {

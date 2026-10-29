@@ -1,0 +1,41 @@
+name: Deploy
+on:
+  push:
+    branches: [master]
+concurrency:
+  group: deploy-mac-mini
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: [self-hosted, mac-mini]
+    env:
+      PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+    steps:
+      - name: Validar .env en el host
+        run: test -f "$HOME/apps/hylian-mcp/.env" || { echo "falta $HOME/apps/hylian-mcp/.env"; exit 1; }
+      # ~/apps/hylian-mcp es un clon: Claude Code lanza la imagen con su .env y supabase/ vive ahí.
+      # --ff-only falla si alguien editó a mano en el host, en vez de pisarlo.
+      - name: Actualizar ~/apps/hylian-mcp
+        run: |
+          cd "$HOME/apps/hylian-mcp"
+          git pull --ff-only origin master
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo "HEAD $(git rev-parse HEAD) != $GITHUB_SHA"; exit 1; }
+      - name: Supabase arriba
+        run: |
+          cd "$HOME/apps/hylian-mcp"
+          supabase status > /dev/null 2>&1 || supabase start
+      # Las migraciones son idempotentes (IF NOT EXISTS), así que se aplican todas en cada deploy.
+      - name: Migraciones
+        run: |
+          DB=$(docker ps --format '{{.Names}}' | grep -m1 '^supabase_db_hylian-mcp$')
+          for f in "$HOME"/apps/hylian-mcp/src/db/migrations/*.sql; do
+            echo "→ $(basename "$f")"
+            docker exec -i "$DB" psql -U postgres -v ON_ERROR_STOP=1 -q < "$f"
+          done
+      - name: Build de la imagen
+        run: docker build -t hylian-mcp:local "$HOME/apps/hylian-mcp"
+      # Arranca por stdio y sale al cerrarse stdin: si no imprime la línea de arranque, el deploy falla.
+      - name: Smoke test
+        run: |
+          docker run --rm -i --env-file "$HOME/apps/hylian-mcp/.env" hylian-mcp:local < /dev/null > smoke.log 2>&1
+          grep 'MCP server running via stdio' smoke.log || { cat smoke.log; exit 1; }
