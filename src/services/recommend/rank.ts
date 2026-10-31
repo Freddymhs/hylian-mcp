@@ -43,7 +43,7 @@ export async function rankGames(
   const matched = matches.filter(({ raw }) => raw > 0);
   const best = Math.max(0, ...matched.map(({ raw }) => raw));
 
-  const ranked = [...matched]
+  const ranked = matched
     .sort((a, b) => b.raw - a.raw || a.name.localeCompare(b.name))
     .map(({ name, matchedTags, raw }) => ({
       name,

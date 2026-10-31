@@ -109,8 +109,9 @@ pnpm build        # limpia dist/, compila y copia el SQL
 ```
 
 **Supabase local** (Docker + [Supabase CLI](https://supabase.com/docs/guides/local-development)): el mismo código,
-sin proyecto en la nube. `supabase/config.toml` carga `src/db/schema.sql` en la base nueva y deja apagados los
-servicios que el server no usa.
+sin proyecto en la nube. `supabase/config.toml` carga `src/db/schema.sql` en la base nueva y apaga realtime,
+storage, edge functions, analytics y el SMTP de prueba. Auth queda prendido porque sin él el CLI no entrega las
+claves, y Studio (`http://127.0.0.1:54323`) es el panel para ver las tablas.
 
 ```bash
 supabase start                 # API en http://127.0.0.1:54321
@@ -120,6 +121,26 @@ supabase db reset              # base limpia, vuelve a cargar schema.sql
 
 Pasar a la nube es cambiar `SUPABASE_URL` y `SUPABASE_SERVICE_KEY` en `.env` y correr el schema allá (Instalación,
 paso 1).
+
+**Deploy en el Mac Mini** (`.github/workflows/deploy.yml`, runner self-hosted de `fmarcos-labs`): cuando CI pasa en
+un push a `master`, el runner actualiza el clon `~/apps/hylian-mcp`, levanta Supabase, aplica las migraciones y
+construye `hylian-mcp:local`. El `.env` de ese clon lo crea uno a mano (no está en el repo) y difiere del de
+desarrollo en dos líneas: dentro de Docker `127.0.0.1` es el propio contenedor, así que la base se alcanza por el
+host, y la imagen trae `http` por defecto.
+
+```bash
+SUPABASE_URL=http://host.docker.internal:54321
+MCP_TRANSPORT=stdio
+```
+
+Claude Code del Mac lanza la imagen (registro único; Docker con ruta absoluta porque el PATH de Claude Code puede
+no incluirlo, y `TZ` para que el backup y el cron usen la hora local):
+
+```bash
+claude mcp add --scope user hylian-mcp -- "$(command -v docker)" run -i --rm \
+  --env-file ~/apps/hylian-mcp/.env -e TZ=America/Santiago \
+  -v ~/.hylian-mcp:/home/appuser/.hylian-mcp hylian-mcp:local
+```
 
 - [`docs/_CONCEPTO.md`](docs/_CONCEPTO.md) — especificación: dominio, schema, stack.
 - [`docs/backlog/`](docs/backlog/) — fases y estado de implementación.

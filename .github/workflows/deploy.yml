@@ -1,41 +1,57 @@
 name: Deploy
+# Corre cuando CI termina, y solo si pasó: un push que rompe lint o tests no llega al Mac Mini.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [master]
 concurrency:
   group: deploy-mac-mini
   cancel-in-progress: false
 jobs:
   deploy:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
     runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 15
     env:
       PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
     steps:
+      # env: no expande $HOME, así que APP_DIR se fija en el primer paso para todos los demás.
       - name: Validar .env en el host
-        run: test -f "$HOME/apps/hylian-mcp/.env" || { echo "falta $HOME/apps/hylian-mcp/.env"; exit 1; }
-      # ~/apps/hylian-mcp es un clon: Claude Code lanza la imagen con su .env y supabase/ vive ahí.
-      # --ff-only falla si alguien editó a mano en el host, en vez de pisarlo.
-      - name: Actualizar ~/apps/hylian-mcp
         run: |
-          cd "$HOME/apps/hylian-mcp"
+          APP_DIR="$HOME/apps/hylian-mcp"
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+          test -f "$APP_DIR/.env" || { echo "falta $APP_DIR/.env"; exit 1; }
+      # APP_DIR es un clon: Claude Code lanza la imagen con su .env y supabase/ vive ahí.
+      # --ff-only falla si alguien editó a mano en el host, en vez de pisarlo. Si llegó un push más nuevo,
+      # HEAD lo incluye y este deploy instala ese: basta con que DEPLOY_SHA esté en la historia.
+      - name: Actualizar el clon del host
+        run: |
+          cd "$APP_DIR"
           git pull --ff-only origin master
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo "HEAD $(git rev-parse HEAD) != $GITHUB_SHA"; exit 1; }
+          git merge-base --is-ancestor "$DEPLOY_SHA" HEAD || { echo "$DEPLOY_SHA no está en HEAD $(git rev-parse HEAD)"; exit 1; }
       - name: Supabase arriba
         run: |
-          cd "$HOME/apps/hylian-mcp"
+          cd "$APP_DIR"
           supabase status > /dev/null 2>&1 || supabase start
       # Las migraciones son idempotentes (IF NOT EXISTS), así que se aplican todas en cada deploy.
+      # El contenedor se llama supabase_db_<project_id>; project_id sale de supabase/config.toml.
       - name: Migraciones
         run: |
-          DB=$(docker ps --format '{{.Names}}' | grep -m1 '^supabase_db_hylian-mcp$')
-          for f in "$HOME"/apps/hylian-mcp/src/db/migrations/*.sql; do
+          PROJECT_ID=$(sed -n 's/^project_id = "\(.*\)"$/\1/p' "$APP_DIR/supabase/config.toml")
+          DB="supabase_db_$PROJECT_ID"
+          docker ps --format '{{.Names}}' | grep -qx "$DB" || { echo "no corre el contenedor $DB"; exit 1; }
+          for f in "$APP_DIR"/src/db/migrations/*.sql; do
             echo "→ $(basename "$f")"
             docker exec -i "$DB" psql -U postgres -v ON_ERROR_STOP=1 -q < "$f"
           done
       - name: Build de la imagen
-        run: docker build -t hylian-mcp:local "$HOME/apps/hylian-mcp"
-      # Arranca por stdio y sale al cerrarse stdin: si no imprime la línea de arranque, el deploy falla.
-      - name: Smoke test
+        run: docker build -t hylian-mcp:local "$APP_DIR"
+      # Solo prueba que la imagen arranca por stdio y sale al cerrarse stdin: los servicios son lazy, así que
+      # no toca Supabase ni Steam. MCP_TRANSPORT va explícito porque la imagen trae http por defecto.
+      - name: Arranque de la imagen por stdio
         run: |
-          docker run --rm -i --env-file "$HOME/apps/hylian-mcp/.env" hylian-mcp:local < /dev/null > smoke.log 2>&1
+          docker run --rm -i --env-file "$APP_DIR/.env" -e MCP_TRANSPORT=stdio hylian-mcp:local < /dev/null > smoke.log 2>&1 \
+            || { cat smoke.log; exit 1; }
           grep 'MCP server running via stdio' smoke.log || { cat smoke.log; exit 1; }

@@ -33,7 +33,7 @@ pnpm test -- greet    # vitest run filtered (single file or test name)
 pnpm test:cov         # vitest run --coverage
 ```
 
-CI (`.github/workflows/ci.yml`) runs `install --frozen-lockfile` → `lint` → `build` → `test` on push/PR to main/master. Deploy (`.github/workflows/deploy.yml`) runs on every push to master on the Mac Mini's self-hosted runner (`fmarcos-labs`): `git pull --ff-only` in `~/apps/hylian-mcp` → Supabase up → every migration → `docker build -t hylian-mcp:local` → stdio smoke test; Claude Code there launches that image. Pre-commit (Husky) runs `eslint --fix` + `prettier --write` on staged files only. `npm pack` runs `prepack` (= `pnpm build`); never `npm publish` without the owner.
+CI (`.github/workflows/ci.yml`) runs `install --frozen-lockfile` → `lint` → `build` → `test` on push/PR to main/master. Deploy (`.github/workflows/deploy.yml`) runs on the Mac Mini's self-hosted runner (`fmarcos-labs`) when CI succeeds on a push to master: `git pull --ff-only` in `~/apps/hylian-mcp` → Supabase up → every migration → `docker build -t hylian-mcp:local` → stdio boot check (it does not touch Supabase or Steam); Claude Code there launches that image (README → Desarrollo → Deploy en el Mac Mini; why: `docs/decisions/DECISION_DEPLOY_MAC_MINI.md`). Pre-commit (Husky) runs `eslint --fix` + `prettier --write` on staged files only. `npm pack` runs `prepack` (= `pnpm build`); never `npm publish` without the owner.
 
 ## Architecture
 
@@ -94,7 +94,7 @@ Always use an alias to import across alias roots (`@services/*` from `src/tools/
 
 **Env validation is zod.** New env vars go in `src/config/constants.ts` (`ENV_KEYS`) + `src/config/env.ts` (schema) — both files, kept in sync. `.env.example` too.
 
-**Schema changes touch four places:** `src/db/schema.sql` (SSOT, for fresh installs), a new `src/db/migrations/000N_*.sql` (for existing databases; must be idempotent — `IF NOT EXISTS` — because the deploy re-applies every migration on each push), `src/db/types.ts` (hand-written `Database` type — rows must be `type` aliases, not interfaces), and the repository. `build` copies the SQL into `dist/db/` so it ships in the npm tarball.
+**Schema changes touch four places:** `src/db/schema.sql` (SSOT, for fresh installs), a new `src/db/migrations/000N_*.sql` (for existing databases; must be idempotent — `IF NOT EXISTS` — because the deploy re-applies every migration on each push), `src/db/types.ts` (hand-written `Database` type — rows must be `type` aliases, not interfaces), and the repository. `build` copies the SQL into `dist/db/` so it ships in the npm tarball. Supabase local reads `schema.sql` through `sql_paths` in `supabase/config.toml`, only on a fresh database or `supabase db reset`; an existing one gets the migrations from the deploy.
 
 **Cron must not keep the process alive or write to stdout.** In stdio mode the process must exit when the client closes stdin: every `cron.schedule` passes `unref: true`. node-cron's default logger uses `console.info/debug` (stdout) — always pass `logger: cronLogger`.
 

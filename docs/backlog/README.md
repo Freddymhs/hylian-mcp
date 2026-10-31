@@ -4,8 +4,8 @@ Backlog estructurado del proyecto. Generado desde `../_CONCEPTO.md` (single-user
 
 ## Estado actual
 
-**Fase actual:** todas las fases implementadas con dobles (2026-10-24).
-**Próximo paso:** probar con credenciales reales (Supabase + Steam), seguir `docs/flows.md`, y decidir el `npm publish`. Pendientes en cada `docs/decisions/DECISION_FASE*_DESVIOS.md`.
+**Fase actual:** todas las fases implementadas con dobles (2026-10-24); desde 2026-10-29 probadas contra Supabase local y la Steam API real (`docs/flows.md`) y deployadas en el Mac Mini (`docs/decisions/DECISION_DEPLOY_MAC_MINI.md`).
+**Próximo paso:** decidir Supabase cloud (una sola base para PC y Mac Mini) y el `npm publish`. Pendientes en cada `docs/decisions/DECISION_*.md`.
 
 ## Fases
 
